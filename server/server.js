@@ -74,7 +74,7 @@ server.post('/api/grades', (request, response)=> {
 
         //console.log(query);
         //response.send(query);
-        db.query(query, (error, results)=>{
+        db.query(query, (error, result)=>{
             if (!error){
                 response.send({
                     success: true,
@@ -89,6 +89,39 @@ server.post('/api/grades', (request, response)=> {
         })
     })
 })
+
+//establish a DELETE endpoint
+server.delete('/api/grades', (request, response)=>{
+    // console.log(request.query);
+    // response.send( request.query);   //this closes the connection at the end
+    if (request.query.student_id === undefined){
+        response.send( {
+            success: false,
+            error: 'must provide a student id for delete'
+        });
+        return;
+    }
+    db.connect(()=>{
+        //DELETE FROM `grades` WHERE `id` = student_id
+        const query = "DELETE FROM `grades` WHERE `id` =" + request.query.student_id;
+        db.query(query, (error, result)=>{
+            if (!error){
+                response.send({
+                    success: true,
+                    deleted_id: result.student_id
+                })
+            } else {
+                response.send ({
+                    success: false,
+                    error   //same as error: error in es5
+                })
+            }
+        })
+
+    })
+})
+
+
 
 
 
