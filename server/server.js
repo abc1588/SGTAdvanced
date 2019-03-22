@@ -13,6 +13,8 @@ server.use( express.static( __dirname + '/html'));
 //have express pull body data that is urlencoded and place it into an object called "body"
 server.use( express.urlencoded({extended: false}));
 
+server.use(express.json()) //used for things like axios
+
 //*** backend of the full stack ****
 //make an endpoint to handle retrieving the grades of all students
 //when server port 3001 receives a request for url(/api/grades) - call db.connect function
@@ -46,8 +48,46 @@ server.get('/api/grades', (req, res) => {
 })
 
 
-server.post('/api/grades', (request, response)=> {
+// INSERT INTO `grades` SET `givenname`="Dan", `surname`="Paschal",`course`="math", `grade`=80
+// INSERT INTO `grades` (`givenname`,`surname`,`course`,`grade`)
+//     VALUES ("Dan","Paschal","Math",80)
 
+server.post('/api/grades', (request, response)=> {
+    //for testing... response.send( request.body);
+
+    if (request.body.name===undefined || request.body.course===undefined || request.body.grade===undefined) {
+        //respond to the client with an appropriate error message
+        response.send({
+            success: false,
+            error: 'invalid name, course, or grade'
+        });
+
+        return;
+    }
+
+    //connect to the database
+    db.connect( ()=> {
+        const name = request.body.name.split(" ");
+
+        //const query = 'INSERT INTO `grades` (`givenname`,`surname`,`course`,`grade`,`added`) VALUES (\"Dan\",\"Paschal\",\"Math\",80,NOW()';
+        const query = 'INSERT INTO `grades` (`givenname`,`surname`,`course`,`grade`,`added`) VALUES ("' + name[0] + '","' + name[1] + '", "Math",80,NOW())';
+
+        //console.log(query);
+        //response.send(query);
+        db.query(query, (error, results)=>{
+            if (!error){
+                response.send({
+                    success: true,
+                    new_id: result.insertID
+                })
+            } else {
+                response.send ({
+                    success: false,
+                    error
+                })
+            }
+        })
+    })
 })
 
 
